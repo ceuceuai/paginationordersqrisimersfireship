@@ -1781,39 +1781,44 @@
     };
 
     window.applySettingsUI = () => {
-        const set = window.appState.settings;
-        if(set.primaryColor) {
-            document.documentElement.style.setProperty('--brand-color', set.primaryColor);
-            document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
-        }
+    const set = window.appState.settings;
+    if (!set) return;
 
-        if(set.secondaryColor) {
+    // 1. Branding (Warna & Nama)
+    if (set.primaryColor) {
+        document.documentElement.style.setProperty('--brand-color', set.primaryColor);
+        document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
+    }
+    if (set.secondaryColor) {
         document.documentElement.style.setProperty('--secondary-color', set.secondaryColor);
-        }
-       
-        if(set.appName) {
-            document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
-        }
-        window.applyLogo(set.logoUrl);
-        
-        if (document.getElementById('settingAppName')) document.getElementById('settingAppName').value = set.appName || 'iMersFireship';
-        if (document.getElementById('settingColor')) document.getElementById('settingColor').value = set.primaryColor || '#4f46e5';
-        if (document.getElementById('settingColorText')) document.getElementById('settingColorText').value = set.primaryColor || '#4f46e5';
-        if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = set.logoUrl || '';
+    }
+    if (set.appName) {
+        document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
+    }
+    window.applyLogo(set.logoUrl);
+    
+    // 2. Isi Inputan Identitas (Admin Settings)
+    if (document.getElementById('settingAppName')) document.getElementById('settingAppName').value = set.appName || '';
+    if (document.getElementById('settingColor')) document.getElementById('settingColor').value = set.primaryColor || '#4f46e5';
+    if (document.getElementById('settingSecondaryColor')) document.getElementById('settingSecondaryColor').value = set.secondaryColor || '#ec4899';
+    if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = set.logoUrl || '';
 
-        // TAMPILKAN KEMBALI DATA NOTIFIKASI (WA, Email, Telegram)
-        if (set.notifications) {
-            if (document.getElementById('notifWaProvider')) document.getElementById('notifWaProvider').value = set.notifications.waProvider || 'fonnte';
-            if (document.getElementById('notifWaToken')) document.getElementById('notifWaToken').value = set.notifications.waToken || '';
-            if (document.getElementById('notifAdminWa')) document.getElementById('notifAdminWa').value = set.notifications.adminWa || '';
-            
-            if (document.getElementById('notifEmailProvider')) document.getElementById('notifEmailProvider').value = set.notifications.emailProvider || 'google';
-            if (document.getElementById('notifEmailToken')) document.getElementById('notifEmailToken').value = set.notifications.emailToken || '';
-            
-            if (document.getElementById('notifTelegramToken')) document.getElementById('notifTelegramToken').value = set.notifications.telegramToken || '';
-            if (document.getElementById('notifTelegramChatId')) document.getElementById('notifTelegramChatId').value = set.notifications.telegramChatId || '';
-        }
-    };
+    // 3. FITUR BARU (QRIS & REDIRECT)
+    if (document.getElementById('settingQrisUrl')) document.getElementById('settingQrisUrl').value = set.qrisUrl || '';
+    if (document.getElementById('settingSuccessBtnText')) document.getElementById('settingSuccessBtnText').value = set.successBtnText || 'Ke Dashboard';
+    if (document.getElementById('settingSuccessBtnUrl')) document.getElementById('settingSuccessBtnUrl').value = set.successBtnUrl || '';
+
+    // 4. Notifikasi (Panggil langsung kolomnya, bukan lewat .notifications)
+    if (document.getElementById('notifWaProvider')) document.getElementById('notifWaProvider').value = set.waProvider || 'fonnte';
+    if (document.getElementById('notifWaToken')) document.getElementById('notifWaToken').value = set.waToken || '';
+    if (document.getElementById('notifAdminWa')) document.getElementById('notifAdminWa').value = set.adminWa || '';
+    
+    if (document.getElementById('notifEmailProvider')) document.getElementById('notifEmailProvider').value = set.emailProvider || 'google';
+    if (document.getElementById('notifEmailToken')) document.getElementById('notifEmailToken').value = set.emailToken || '';
+    
+    if (document.getElementById('notifTelegramToken')) document.getElementById('notifTelegramToken').value = set.telegramToken || '';
+    if (document.getElementById('notifTelegramChatId')) document.getElementById('notifTelegramChatId').value = set.telegramChatId || '';
+};
 
     // --- AUTH LOGIC ---
     window.switchAuthView = (view) => {
