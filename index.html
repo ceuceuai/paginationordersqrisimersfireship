@@ -2803,119 +2803,58 @@
     };
 
     window.renderAdminPayoutTable = () => {
-    const tbody = document.getElementById('payoutTableBody');
-    if (!tbody) return; 
-    tbody.innerHTML = '';
+        const tbody = document.getElementById('payoutTableBody');
+        if(!tbody) return;
+        tbody.innerHTML = '';
 
-    // 1. Kalkulasi Komisi Langsung (Gaya Asli Lo)
-    let payoutMap = {}; 
-    window.appState.orders.forEach(o => {
-        if (o.status === 'Paid' && o.affiliateRef && o.affiliatePayoutStatus !== 'Paid') {
-            const prod = window.appState.products.find(p => String(p.id) === String(o.productId));
-            const affUser = window.appState.usersData.find(u => u.affiliateCode === o.affiliateRef || String(u.id) === String(o.affiliateRef));
-            
-            if(prod && affUser) {
-                let komisiItem = prod.commissionType === 'percent' ? o.basePrice * (Number(prod.commissionValue) / 100) : Number(prod.commissionValue);
-                if (!payoutMap[affUser.id]) payoutMap[affUser.id] = { user: affUser, totalPending: 0 };
-                payoutMap[affUser.id].totalPending += komisiItem;
+        let payoutMap = {}; 
+        window.appState.orders.forEach(o => {
+            if (o.status === 'Paid' && o.affiliateRef && o.affiliatePayoutStatus !== 'Paid') {
+                const prod = window.appState.products.find(p => String(p.id) === String(o.productId));
+                const affUser = window.appState.usersData.find(u => u.affiliateCode === o.affiliateRef || String(u.id) === String(o.affiliateRef));
+                
+                if(prod && affUser) {
+                    let komisiItem = prod.commissionType === 'percent' ? o.basePrice * (Number(prod.commissionValue) / 100) : Number(prod.commissionValue);
+                    if (!payoutMap[affUser.id]) payoutMap[affUser.id] = { user: affUser, totalPending: 0 };
+                    payoutMap[affUser.id].totalPending += komisiItem;
+                }
             }
-        }
-    });
+        });
 
-    const pendingList = Object.values(payoutMap).filter(item => item.totalPending > 0);
+        const pendingAffiliates = Object.values(payoutMap).filter(item => item.totalPending > 0);
 
-    // 2. Render Tabel
-    if(pendingList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 font-bold italic">Tidak ada antrian pencairan komisi.</td></tr>`;
-        return;
-    }
-
-    pendingList.forEach(item => {
-        const u = item.user;
-        let bankInfo = `<span class="text-red-500 font-bold text-[10px]">Rekening Belum Set</span>`;
-        if(u.bankName || u.bankNo) {
-            bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
-                <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
-                <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
-                <p class="text-slate-500 italic opacity-60 text-[9px]">a.n ${u.bankOwner || '???'}</p>
-            </div>`;
+        if(pendingAffiliates.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 font-bold">Semua komisi sudah terbayar / belum ada komisi pending.</td></tr>`;
+            return;
         }
 
-        tbody.innerHTML += `
-            <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
-                <td class="px-6 py-4">
-                    <p class="font-bold text-slate-800 dark:text-white text-sm">${u.name}</p>
-                    <p class="text-[10px] text-slate-500">${u.wa || u.email}</p>
-                </td>
-                <td class="px-6 py-4">${bankInfo}</td>
-                <td class="px-6 py-4 font-black text-orange-500 text-sm">${window.formatRp(item.totalPending)}</td>
-                <td class="px-6 py-4 text-right">
-                    <button onclick="window.processPayout('${u.id}')" class="bg-brand text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-md shadow-brand/30 transition-all active:scale-95">
-                        CAIRKAN
-                    </button>
-                </td>
-            </tr>`;
-    });
-};
-
-        // 6. Update Footer & Navigasi Panah
-        const info = document.getElementById('payoutPaginationInfo');
-        if (info) info.innerHTML = `Showing <b>${totalData > 0 ? start + 1 : 0}</b> to <b>${Math.min(start + limit, totalData)}</b> of <b>${totalData}</b> requests`;
-
-        const bp = document.getElementById('btnPayPrev');
-        const bn = document.getElementById('btnPayNext');
-        
-        if (bp) {
-            bp.disabled = (window.appState.payoutPage <= 1);
-            bp.onclick = () => { window.appState.payoutPage--; window.renderAdminPayoutTable(); };
-            bp.style.opacity = bp.disabled ? "0.3" : "1";
-        }
-        if (bn) {
-            bn.disabled = (window.appState.payoutPage >= totalPages);
-            bn.onclick = () => { window.appState.payoutPage++; window.renderAdminPayoutTable(); };
-            bn.style.opacity = bn.disabled ? "0.3" : "1";
-        }
-    };
-    window.processPayout = async (affiliateId) => {
-        if(confirm("Tandai komisi affiliate ini sudah ditransfer? Ini akan mengirim notifikasi ke Affiliate.")) {
-            try {
-                window.showToast("Memproses pencairan...", "info");
-                await apiCall('payAffiliate', { affiliateId: affiliateId });
-                window.showToast("Pencairan berhasil dicatat & Notif dikirim!", "success");
-                await window.loadAllData();
-            } catch(e) {
-                window.showToast(e.message, "error");
+        pendingAffiliates.forEach(item => {
+            const u = item.user;
+            let bankInfo = '<span class="text-red-500 font-bold text-xs"><i class="ph ph-warning-circle"></i> Rekening belum diset</span>';
+            if(u.bankName || u.bankNo) {
+                bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
+                    <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
+                    <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
+                    <p class="text-slate-500 italic opacity-60">a.n ${u.bankOwner || '???'}</p>
+                </div>`;
             }
-        }
-    };
 
-    window.saveUserBank = async (e) => {
-        e.preventDefault();
-        const bName = document.getElementById('affBankName').value;
-        const bNo = document.getElementById('affBankNo').value;
-        const bOwner = document.getElementById('affBankOwner').value;
-
-        if(!window.appState.user) return;
-        const payload = { id: window.appState.user.id, bankName: bName, bankNo: bNo, bankOwner: bOwner };
-
-        try {
-            await apiCall('saveUser', payload);
-            window.appState.user.bankName = bName; window.appState.user.bankNo = bNo; window.appState.user.bankOwner = bOwner;
-            localStorage.setItem('iMersUser', JSON.stringify(window.appState.user));
-            window.showToast("Rekening berhasil disimpan!", "success");
-        } catch(err) {
-            window.showToast("Error saving bank: " + err.message, "error");
-        }
-    };
-
-    window.copyTextToClipboard = (text) => {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => window.showToast("Link disalin!"));
-        } else {
-            const textArea = document.createElement("textarea");
-            textArea.value = text; document.body.appendChild(textArea); textArea.select();
-            document.execCommand("copy"); textArea.remove(); window.showToast("Link disalin!");
-        }
+            tbody.innerHTML += `
+                <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-slate-800 dark:text-white text-base">${u.name}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">${u.wa || u.email}</p>
+                    </td>
+                    <td class="px-6 py-4">${bankInfo}</td>
+                    <td class="px-6 py-4 font-black text-orange-500 text-base">${window.formatRp(item.totalPending)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="window.processPayout('${u.id}')" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md shadow-green-500/30 transition-all flex items-center gap-1 justify-end ml-auto">
+                            <i class="ph ph-check-circle text-base"></i> Tandai Sudah Ditransfer
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
     };
 
     // ==========================================
