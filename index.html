@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iMersFireship - Digital Product Platform</title>
+    <title>Loading...</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
     
@@ -3802,23 +3802,25 @@
 
     window.saveSettings = async () => { 
         try { 
+            // 1. AMBIL DATA DARI INPUT
             const n = document.getElementById('settingAppName').value;
             const c = document.getElementById('settingColor').value;
             const sc = document.getElementById('settingSecondaryColor').value;
             const f = document.getElementById('settingLogoFile').files[0];
             const lu = document.getElementById('settingLogoUrl').value; 
             
-            document.documentElement.style.setProperty('--brand-color', c); 
-            document.documentElement.style.setProperty('--brand-hover', c);
-            document.documentElement.style.setProperty('--secondary-color', sc);
-            document.querySelectorAll('.app-name-display').forEach(e => e.innerText = n || 'iMers'); 
-            
+            // 2. DATA BANK
             let bk = []; 
             document.querySelectorAll('.bank-item').forEach(e => {
                 const bn = e.querySelector('.b-name').value; 
-                if(bn) bk.push({name: bn, no: e.querySelector('.b-no').value, owner: e.querySelector('.b-owner').value});
+                if(bn) bk.push({
+                    name: bn, 
+                    no: e.querySelector('.b-no').value, 
+                    owner: e.querySelector('.b-owner').value
+                });
             }); 
             
+            // 3. DATA NOTIFIKASI
             const notifData = {
                 waProvider: document.getElementById('notifWaProvider')?.value || 'fonnte',
                 waToken: document.getElementById('notifWaToken')?.value || '',
@@ -3829,8 +3831,10 @@
                 telegramChatId: document.getElementById('notifTelegramChatId')?.value || ''
             };
 
+            // 4. PROSES LOGO (Upload/Compress jika ada file baru)
             let img = f ? await window.compressImage(f, 400) : lu; 
             
+            // 5. KIRIM KE DATABASE (SERVER)
             await apiCall('saveSettings', {
                 appName: n, 
                 primaryColor: c,
@@ -3840,12 +3844,27 @@
                 notifications: notifData
             }); 
             
-            window.applyLogo(img); 
-            window.showToast("Settings saved!"); 
+            // 6. UPDATE MEMORI LOKAL (PENTING BIAR SYNC)
+            window.appState.settings = {
+                appName: n,
+                primaryColor: c,
+                secondaryColor: sc,
+                logoUrl: img,
+                banks: bk,
+                notifications: notifData
+            };
+            
+            // 7. FINISH: TERAPKAN KE UI (Ganti Title, Warna, dll Secara Instan)
+            window.applySettingsUI(); 
+            window.showToast("Settings saved and UI updated!"); 
+            
+            // 8. REFRESH DATA (Opsional tapi bagus buat mastiin sinkron)
             await window.loadAllData(); 
-        } catch(e) { window.showToast(e.message, "error"); } 
+            
+        } catch(e) { 
+            window.showToast(e.message, "error"); 
+        } 
     };
-
     // --- LOGIKA BARU: SYSTEM SETTINGS (KONTROL PANEL) ---
     window.renderSystemSettings = () => {
     try {
