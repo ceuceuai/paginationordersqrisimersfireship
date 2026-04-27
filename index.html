@@ -1846,37 +1846,52 @@
 
     window.applySettingsUI = () => {
         const set = window.appState.settings;
+        if (!set) return; // Proteksi awal kalau settings kosong
+
         if(set.primaryColor) {
             document.documentElement.style.setProperty('--brand-color', set.primaryColor);
             document.documentElement.style.setProperty('--brand-hover', set.primaryColor);
         }
 
         if(set.secondaryColor) {
-        document.documentElement.style.setProperty('--secondary-color', set.secondaryColor);
+            document.documentElement.style.setProperty('--secondary-color', set.secondaryColor);
         }
        
         if(set.appName) {
             document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
             document.title = set.appName + " - Digital Product Platform";
         }
-        window.applyLogo(set.logoUrl);
+
+        // BUNGKUS PAKE TRY-CATCH BIAR GAK NGERUSAK ANTRIAN
+        try {
+            if (typeof window.applyLogo === 'function') {
+                window.applyLogo(set.logoUrl);
+            }
+        } catch (e) {
+            console.warn("Gagal menerapkan logo:", e);
+        }
         
+        // LANJUT ISI INPUT SECARA AMAN
         if (document.getElementById('settingAppName')) document.getElementById('settingAppName').value = set.appName || 'iMersFireship';
         if (document.getElementById('settingColor')) document.getElementById('settingColor').value = set.primaryColor || '#4f46e5';
         if (document.getElementById('settingColorText')) document.getElementById('settingColorText').value = set.primaryColor || '#4f46e5';
         if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = set.logoUrl || '';
 
-        // TAMPILKAN KEMBALI DATA NOTIFIKASI (WA, Email, Telegram)
+        // TAMPILKAN KEMBALI DATA NOTIFIKASI
         if (set.notifications) {
-            if (document.getElementById('notifWaProvider')) document.getElementById('notifWaProvider').value = set.notifications.waProvider || 'fonnte';
-            if (document.getElementById('notifWaToken')) document.getElementById('notifWaToken').value = set.notifications.waToken || '';
-            if (document.getElementById('notifAdminWa')) document.getElementById('notifAdminWa').value = set.notifications.adminWa || '';
-            
-            if (document.getElementById('notifEmailProvider')) document.getElementById('notifEmailProvider').value = set.notifications.emailProvider || 'google';
-            if (document.getElementById('notifEmailToken')) document.getElementById('notifEmailToken').value = set.notifications.emailToken || '';
-            
-            if (document.getElementById('notifTelegramToken')) document.getElementById('notifTelegramToken').value = set.notifications.telegramToken || '';
-            if (document.getElementById('notifTelegramChatId')) document.getElementById('notifTelegramChatId').value = set.notifications.telegramChatId || '';
+            const n = set.notifications;
+            const updateIfExist = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val || '';
+            };
+
+            updateIfExist('notifWaProvider', n.waProvider || 'fonnte');
+            updateIfExist('notifWaToken', n.waToken);
+            updateIfExist('notifAdminWa', n.adminWa);
+            updateIfExist('notifEmailProvider', n.emailProvider || 'google');
+            updateIfExist('notifEmailToken', n.emailToken);
+            updateIfExist('notifTelegramToken', n.telegramToken);
+            updateIfExist('notifTelegramChatId', n.telegramChatId);
         }
     };
     
