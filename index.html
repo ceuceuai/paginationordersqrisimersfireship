@@ -2503,100 +2503,99 @@
     // ==========================================
     
     window.renderUsersTable = () => {
-        const tbody = document.getElementById('usersTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
 
-        // --- A. LOGIKA SEARCH & FILTER USER ---
-        const searchQuery = (document.getElementById('userSearchInput')?.value || '').toLowerCase();
-        const roleFilter = document.getElementById('userRoleFilter')?.value || 'ALL';
+    // --- A. LOGIKA SEARCH & FILTER USER ---
+    const searchQuery = (document.getElementById('userSearchInput')?.value || '').toLowerCase();
+    const roleFilter = document.getElementById('userRoleFilter')?.value || 'ALL';
 
-        let filteredUsers = (window.appState.usersData || []).filter(u => {
-            if (!u) return false;
-            const name = (u.name || '').toLowerCase();
-            const email = (u.email || '').toLowerCase();
-            const role = (u.role || '').toLowerCase();
-            
-            const matchText = name.includes(searchQuery) || email.includes(searchQuery);
-            const matchRole = roleFilter === 'ALL' || role === roleFilter.toLowerCase();
-            
-            return matchText && matchRole;
-        });
-
-        // --- B. LOGIKA PAGINATION ---
-        const limit = 10;
-        if (!window.appState.userPage) window.appState.userPage = 1;
+    let filteredUsers = (window.appState.usersData || []).filter(u => {
+        if (!u) return false;
+        const name = (u.name || '').toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        const role = (u.role || '').toLowerCase();
         
-        const totalData = filteredUsers.length;
-        const totalPages = Math.ceil(totalData / limit) || 1;
+        const matchText = name.includes(searchQuery) || email.includes(searchQuery);
+        const matchRole = roleFilter === 'ALL' || role === roleFilter.toLowerCase();
+        
+        return matchText && matchRole;
+    });
 
-        if (window.appState.userPage > totalPages) window.appState.userPage = 1;
+    // --- B. LOGIKA PAGINATION ---
+    const limit = 10;
+    if (!window.appState.userPage) window.appState.userPage = 1;
+    
+    const totalData = filteredUsers.length;
+    const totalPages = Math.ceil(totalData / limit) || 1;
 
-        const start = (window.appState.userPage - 1) * limit;
-        const pagedUsers = filteredUsers.slice(start, start + limit);
+    if (window.appState.userPage > totalPages) window.appState.userPage = 1;
 
-        // --- C. RENDER TABEL (PAKAI KODE LO) ---
-        if (pagedUsers.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-bold italic">User tidak ditemukan...</td></tr>`;
-        } else {
-            pagedUsers.forEach(u => {
-                const roleColors = {
-                    admin: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
-                    agency: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
-                    user: 'bg-slate-500/20 text-slate-700 dark:text-slate-400'
-                };
-                const roleClass = roleColors[u.role] || roleColors['user'];
+    const start = (window.appState.userPage - 1) * limit;
+    const pagedUsers = filteredUsers.slice(start, start + limit);
 
-                let bankInfo = '<span class="text-slate-400 italic text-[10px]">Belum diatur</span>';
-                if (u.bankName || u.bankNo) {
-                    bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
-                        <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
-                        <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
-                        <p class="text-slate-500 italic opacity-60">a.n ${u.bankOwner || '???'}</p>
-                    </div>`;
-                }
+    // --- C. RENDER TABEL ---
+    if (pagedUsers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-bold italic">User tidak ditemukan...</td></tr>`;
+    } else {
+        pagedUsers.forEach(u => {
+            const roleColors = {
+                admin: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
+                agency: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
+                user: 'bg-slate-500/20 text-slate-700 dark:text-slate-400'
+            };
+            const roleClass = roleColors[u.role] || roleColors['user'];
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
-                        <td class="px-6 py-4">
-                            <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-1 text-xs font-bold text-brand bg-brand/5 px-2 py-1 rounded-lg w-max border border-brand/10">
-                                <i class="ph ph-whatsapp-logo text-green-500 text-sm"></i> ${u.wa || '-'}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">${bankInfo}</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="${roleClass} px-3 py-1 rounded-lg text-xs font-black uppercase">${u.role}</span>
-                        </td>
-                        <td class="px-6 py-4 font-mono text-xs text-brand font-bold">${u.affiliateCode || u.license || '-'}</td>
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                <button onclick="window.editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
-                                <button onclick="window.deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
-        }
+            let bankInfo = '<span class="text-slate-400 italic text-[10px]">Belum diatur</span>';
+            if (u.bankName || u.bankNo) {
+                bankInfo = `<div class="bg-brand/5 p-2 rounded-lg border border-brand/10 text-[10px]">
+                    <p class="font-black text-brand uppercase">${u.bankName || '???'}</p>
+                    <p class="font-mono font-bold text-slate-700 dark:text-white">${u.bankNo || '???'}</p>
+                    <p class="text-slate-500 italic opacity-60">a.n ${u.bankOwner || '???'}</p>
+                </div>`;
+            }
 
-        // --- D. UPDATE FOOTER PAGINATION ---
-        const info = document.getElementById('userPaginationInfo');
-        if (info) info.innerHTML = `Showing <b>${totalData > 0 ? start + 1 : 0}</b> to <b>${Math.min(start + limit, totalData)}</b> of <b>${totalData}</b> entries`;
+            tbody.innerHTML += `
+                <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
+                    <td class="px-6 py-4">
+                        <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-1 text-xs font-bold text-brand bg-brand/5 px-2 py-1 rounded-lg w-max border border-brand/10">
+                            <i class="ph ph-whatsapp-logo text-green-500 text-sm"></i> ${u.wa || '-'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">${bankInfo}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="${roleClass} px-3 py-1 rounded-lg text-xs font-black uppercase">${u.role}</span>
+                    </td>
+                    <td class="px-6 py-4 font-mono text-xs text-brand font-bold">${u.affiliateCode || u.license || '-'}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="window.editUser('${u.id}')" class="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 rounded-xl transition-colors" title="Edit"><i class="ph ph-pencil-simple text-xl"></i></button>
+                            <button onclick="window.deleteUser('${u.id}')" class="p-2 text-red-600 dark:text-red-400 hover:bg-red-500/20 rounded-xl transition-colors" title="Delete"><i class="ph ph-trash text-xl"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+    }
 
-        const btnPrev = document.getElementById('btnUserPrev');
-        const btnNext = document.getElementById('btnUserNext');
-        if (btnPrev) { btnPrev.disabled = (window.appState.userPage <= 1); btnPrev.style.opacity = btnPrev.disabled ? "0.3" : "1"; }
-        if (btnNext) { btnNext.disabled = (window.appState.userPage >= totalPages); btnNext.style.opacity = btnNext.disabled ? "0.3" : "1"; }
-    };
+    // --- D. UPDATE FOOTER PAGINATION ---
+    const info = document.getElementById('userPaginationInfo');
+    if (info) info.innerHTML = `Showing <b>${totalData > 0 ? start + 1 : 0}</b> to <b>${Math.min(start + limit, totalData)}</b> of <b>${totalData}</b> entries`;
 
-    // --- FUNGSI NAVIGASI USER ---
-    window.changeUserPage = (dir) => {
-        window.appState.userPage = (window.appState.userPage || 1) + dir;
-        window.renderUsersTable();
-    };
+    const btnPrev = document.getElementById('btnUserPrev');
+    const btnNext = document.getElementById('btnUserNext');
+    if (btnPrev) { btnPrev.disabled = (window.appState.userPage <= 1); btnPrev.style.opacity = btnPrev.disabled ? "0.3" : "1"; }
+    if (btnNext) { btnNext.disabled = (window.appState.userPage >= totalPages); btnNext.style.opacity = btnNext.disabled ? "0.3" : "1"; }
+};
+
+window.changeUserPage = (dir) => {
+    window.appState.userPage = (window.appState.userPage || 1) + dir;
+    window.renderUsersTable();
+};
 
     window.openUserModal = () => {
         try {
