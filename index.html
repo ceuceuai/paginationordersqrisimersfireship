@@ -3553,33 +3553,30 @@
     if (!tb) return;
     tb.innerHTML = '';
 
-    // 1. Ambil data asli dari state
-    const allOrders = window.appState.orders || [];
+    // --- PENGAMAN: CEK APAKAH DATA ORDERS ADA & BENTUKNYA LIST ---
+    const allOrders = Array.isArray(window.appState.orders) ? window.appState.orders : [];
     
-    // 2. Ambil input filter & search dari UI
+    // 1. Ambil input filter & search dari UI
     const sIn = document.getElementById('orderSearchInput');
     const sTerm = sIn ? sIn.value.toLowerCase().trim() : '';
     const fIn = document.getElementById('orderStatusFilter');
     const fStat = fIn ? fIn.value : 'All';
 
-    // 3. Filter Data berdasarkan Search (Nama/ID/Email) dan Status
+    // 2. Filter Data
     const filtered = allOrders.filter(o => {
         const name = (o.customerName || '').toLowerCase();
         const email = (o.customerEmail || '').toLowerCase();
         const oid = String(o.id || '').toLowerCase();
-        
         const mSearch = name.includes(sTerm) || email.includes(sTerm) || oid.includes(sTerm);
         const mStatus = (fStat === 'All') || (o.status === fStat);
-        
         return mSearch && mStatus;
     });
 
-    // 4. Konfigurasi Pagination (10 data per halaman)
+    // 3. Konfigurasi Pagination (10 data per halaman)
     const limit = 10;
     const totalData = filtered.length;
     const maxPage = Math.ceil(totalData / limit) || 1;
     
-    // Pastikan halaman aktif tidak error
     if (!window.appState.orderPage) window.appState.orderPage = 1;
     if (window.appState.orderPage > maxPage) window.appState.orderPage = 1;
 
@@ -3587,29 +3584,28 @@
     const end = start + limit;
     const paged = filtered.slice(start, end);
 
-    // 5. Update Info Halaman di UI
+    // 4. Update Info Halaman di UI
     if(document.getElementById('orderCurrentPage')) document.getElementById('orderCurrentPage').innerText = window.appState.orderPage;
     if(document.getElementById('orderTotalPages')) document.getElementById('orderTotalPages').innerText = maxPage;
     if(document.getElementById('orderTotalData')) document.getElementById('orderTotalData').innerText = totalData;
     
-    // Atur tombol prev/next agar mati otomatis
     if(document.getElementById('btnPrevOrder')) document.getElementById('btnPrevOrder').disabled = window.appState.orderPage <= 1;
     if(document.getElementById('btnNextOrder')) document.getElementById('btnNextOrder').disabled = window.appState.orderPage >= maxPage;
 
-    // 6. Cek jika data kosong
+    // 5. Cek jika kosong
     if (paged.length === 0) {
-        tb.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-500 font-bold text-xs italic">Data tidak ditemukan bray...</td></tr>';
+        tb.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-500 font-bold text-xs italic">Belum ada data order bray...</td></tr>';
         return;
     }
 
-    // 7. Render Baris ke Tabel
+    // 6. Render Baris ke Tabel
     paged.forEach(o => {
         const st = o.status === 'Paid' 
             ? `<span class="text-green-500 font-bold text-[10px] bg-green-500/10 px-2 py-1 rounded-lg">PAID</span>` 
             : `<span class="text-yellow-500 font-bold text-[10px] bg-yellow-500/10 px-2 py-1 rounded-lg">PENDING</span>`;
         
         const act = o.status === 'Paid' 
-            ? `<span class="text-slate-400 text-[10px] font-bold">VERIFIED</span>` 
+            ? `<span class="text-slate-400 text-[10px] font-bold italic">LUNAS</span>` 
             : `<button onclick="window.approveOrder('${o.id}')" class="bg-brand text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:scale-105 transition-all shadow-md shadow-brand/20">Approve</button>`;
         
         tb.innerHTML += `
