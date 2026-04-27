@@ -3560,6 +3560,7 @@
         }
     };
 
+    // --- 1. FUNGSI TAMPILKAN TABEL (TUKANG GAMBAR) ---
     window.renderOrdersTable = () => {
         const tb = document.getElementById('ordersTableBody');
         if (!tb) return;
@@ -3569,20 +3570,14 @@
         const searchQuery = (document.getElementById('orderSearchInput')?.value || '').toLowerCase();
         const statusFilter = document.getElementById('orderStatusFilter')?.value || 'ALL';
 
-        // Filter data mentah dari appState dengan proteksi data null/undefined
         let filteredOrders = (window.appState.orders || []).filter(o => {
-            if (!o) return false; // Abaikan jika data hancur
-            
+            if (!o) return false;
             const name = (o.customerName || '').toLowerCase();
             const title = (o.productTitle || '').toLowerCase();
             const id = (String(o.id) || '').toLowerCase();
             
-            const matchText = name.includes(searchQuery) || 
-                              title.includes(searchQuery) ||
-                              id.includes(searchQuery);
-                              
+            const matchText = name.includes(searchQuery) || title.includes(searchQuery) || id.includes(searchQuery);
             const matchStatus = statusFilter === 'ALL' || o.status === statusFilter;
-            
             return matchText && matchStatus;
         });
 
@@ -3593,7 +3588,7 @@
         const totalData = filteredOrders.length;
         const totalPages = Math.ceil(totalData / limit) || 1;
 
-        // Reset ke hal 1 kalau hasil search berubah
+        // Reset ke hal 1 kalau hasil search berubah dan halaman jadi tidak valid
         if (window.appState.orderPage > totalPages) window.appState.orderPage = 1;
 
         const start = (window.appState.orderPage - 1) * limit;
@@ -3617,20 +3612,46 @@
                         </td>
                         <td class="px-6 py-4 dark:text-white text-xs">${o.productTitle}</td>
                         <td class="px-6 py-4 dark:text-white font-black text-sm">${window.formatRp(o.totalPay || o.basePrice)}</td>
-                        <td class="px-6 py-4 text-xs">${b}</td>
+                        <td class="px-6 py-4 text-xs text-center">${b}</td>
                         <td class="px-6 py-4 text-right">${a}</td>
                     </tr>`;
             });
         }
 
-        // --- D. UPDATE UI INFO ---
+        // --- D. UPDATE UI INFO & TOMBOL ---
         const info = document.getElementById('orderPaginationInfo');
-        if (info) info.innerHTML = `Found <b>${totalData}</b> entries`;
+        if (info) info.innerHTML = `Showing <b>${totalData > 0 ? start + 1 : 0}</b> to <b>${Math.min(end, totalData)}</b> of <b>${totalData}</b> entries`;
 
         const btnPrev = document.getElementById('btnOrderPrev');
         const btnNext = document.getElementById('btnOrderNext');
-        if (btnPrev) btnPrev.disabled = (window.appState.orderPage === 1);
-        if (btnNext) btnNext.disabled = (window.appState.orderPage === totalPages);
+        
+        if (btnPrev) {
+            btnPrev.disabled = (window.appState.orderPage === 1);
+            btnPrev.style.opacity = btnPrev.disabled ? "0.3" : "1";
+        }
+        if (btnNext) {
+            btnNext.disabled = (window.appState.orderPage === totalPages);
+            btnNext.style.opacity = btnNext.disabled ? "0.3" : "1";
+        }
+    };
+
+    // --- 2. FUNGSI PINDAH HALAMAN (NAVIGASI) ---
+    window.changeOrderPage = (dir) => {
+        // Inisialisasi halaman jika belum ada
+        if (!window.appState.orderPage) window.appState.orderPage = 1;
+        
+        // Tambahkan atau kurangi halaman
+        window.appState.orderPage += dir;
+
+        // Validasi agar tidak keluar jalur (proteksi tambahan)
+        if (window.appState.orderPage < 1) window.appState.orderPage = 1;
+
+        // Panggil si Tukang Gambar lagi
+        window.renderOrdersTable();
+
+        // Scroll halus ke atas tabel agar admin enak liatnya
+        const orderView = document.getElementById('content-orders');
+        if (orderView) orderView.scrollIntoView({ behavior: 'smooth' });
     };
 
     window.approveOrder = async (id) => { 
