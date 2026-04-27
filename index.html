@@ -875,44 +875,61 @@
     </div>
 </div>
                 <div id="content-settings" class="content-section hidden space-y-8 max-w-4xl">
-                    <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50">
-                        <h3 class="text-xl font-black text-slate-800 dark:text-white mb-6 border-b border-white/40 dark:border-slate-700/50 pb-4">Admin Settings</h3>
-                        <div class="space-y-8">
-                            <!-- Basic White Label -->
+    <div class="glass rounded-3xl shadow-xl p-8 border border-white/40 dark:border-slate-700/50">
+        <h3 class="text-xl font-black text-slate-800 dark:text-white mb-6 border-b border-white/40 dark:border-slate-700/50 pb-4">Admin Settings</h3>
+        <div class="space-y-8">
+            <div>
+                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Branding & Checkout</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Logo App</label>
+                            <div class="flex items-center gap-3 mb-3">
+                                <input type="url" id="settingLogoUrl" placeholder="URL Logo (https://...)" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white text-xs">
+                            </div>
+                            <input type="file" id="settingLogoFile" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer">
+                        </div>
+
+                        <div class="p-4 bg-brand/5 rounded-2xl border border-brand/10">
+                            <label class="block text-[11px] font-black text-brand mb-2 uppercase tracking-widest">QRIS Payment (Instruksi Bayar)</label>
+                            <input type="text" id="settingQrisUrl" placeholder="URL Gambar QRIS" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs mb-2 outline-none dark:text-white">
+                            <input type="file" onchange="window.handleQrisUpload(this)" accept="image/*" class="w-full text-[10px] text-slate-500 file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-brand file:text-white font-bold cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Platform Name</label>
+                            <input type="text" id="settingAppName" value="iMersFireship" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
+                        </div>
+
+                        <div class="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/10">
+                            <label class="block text-[11px] font-black text-purple-600 mb-2 uppercase tracking-widest">Tombol Selesai Checkout</label>
+                            <div class="space-y-2">
+                                <input type="text" id="settingSuccessBtnText" placeholder="Teks Tombol (Contoh: Gabung Grup)" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none dark:text-white">
+                                <input type="text" id="settingSuccessBtnUrl" placeholder="Link Tujuan Redirect" class="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none dark:text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <h4 class="font-black text-slate-800 dark:text-white mb-4 text-lg">Branding</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Logo URL / Upload</label>
-                                        <div class="flex items-center gap-3 mb-3">
-                                            <input type="url" id="settingLogoUrl" placeholder="https://example.com/logo.png" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white">
-                                        </div>
-                                        <div class="flex items-center gap-3">
-                                            <input type="file" id="settingLogoFile" accept="image/*" class="w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer">
-                                        </div>
-                                    </div>
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Platform Name</label>
-                                            <input type="text" id="settingAppName" value="iMersFireship" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-medium">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Primary Color (Hex)</label>
-                                            <div class="flex items-center gap-3">
-                                                <input type="color" id="settingColor" value="#4f46e5" class="w-12 h-12 rounded-xl cursor-pointer border-0 p-1 bg-white/50 dark:bg-slate-900/50 shadow-sm">
-                                                <input type="text" id="settingColorText" value="#4f46e5" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-brand outline-none transition-all dark:text-white font-mono font-medium" readonly>
-                                            </div>
-                                        </div>
-                                     <div class="mt-4">
-                                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Secondary Color (Hex)</label>
-                                            <div class="flex items-center gap-3">
-                                            <input type="color" id="settingSecondaryColor" value="#ec4899" class="w-12 h-12 rounded-xl cursor-pointer border-0 p-1 bg-white/50 dark:bg-slate-900/50 shadow-sm" oninput="document.getElementById('settingSecondaryColorText').value = this.value">
-                                            <input type="text" id="settingSecondaryColorText" value="#ec4899" class="flex-1 px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none transition-all dark:text-white font-mono font-medium" readonly>
-                                        </div>
-                                            <p class="text-[10px] text-slate-400 mt-1">Gunakan warna ini untuk aksen tombol sekunder atau variasi UI.</p>
-                                    </div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Warna Utama</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="settingColor" value="#4f46e5" class="w-10 h-10 rounded-lg cursor-pointer border-0 p-1 bg-white shadow-sm" oninput="document.getElementById('settingColorText').value = this.value">
+                                    <input type="text" id="settingColorText" value="#4f46e5" class="w-full text-[10px] font-mono border-0 bg-transparent dark:text-white" readonly>
                                 </div>
                             </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Warna Aksen</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" id="settingSecondaryColor" value="#ec4899" class="w-10 h-10 rounded-lg cursor-pointer border-0 p-1 bg-white shadow-sm" oninput="document.getElementById('settingSecondaryColorText').value = this.value">
+                                    <input type="text" id="settingSecondaryColorText" value="#ec4899" class="w-full text-[10px] font-mono border-0 bg-transparent dark:text-white" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
                                 
                             <!-- WA Gateway / Notification Settings -->
                             <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
@@ -1723,7 +1740,7 @@
             window.applySettingsUI();
             window.renderProductsTable();
             window.renderMarketplaceList();
-            window.renderOrdersTable();
+            ();
             window.renderCouponsTable();
             window.renderTemplatesTable();
             window.renderSettingsBankList();
@@ -3384,7 +3401,7 @@
         btn.innerHTML = '<i class="ph ph-circle-notch animate-spin"></i> Processing...';
 
         try {
-            // AMBIL DATA DARI FORM (LOGIKA ASLI LO)
+            // AMBIL DATA DARI FORM
             const pd = window.appState.currentCheckoutProduct;
             const n = document.getElementById('coName').value.trim();
             const e = document.getElementById('coEmail').value.trim();
@@ -3430,21 +3447,40 @@
 
             // 2. TAMPILAN INSTRUKSI PEMBAYARAN
             const successView = document.getElementById('view-checkout');
+            const settings = window.appState.settings;
             
             if (t <= 0) {
-                // Tampilan Gratis (Langsung Login)
+                // Tampilan Gratis (Langsung Login/Redirect)
+                const customBtnText = settings.successBtnText || 'Login Sekarang';
+                const customBtnUrl = settings.successBtnUrl || '/';
+
                 successView.innerHTML = `
                     <div class="max-w-md mx-auto py-20 px-6 text-center animate-in fade-in duration-500">
                         <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
                             <i class="ph-fill ph-check-circle text-5xl"></i>
                         </div>
                         <h2 class="text-3xl font-black mb-4">Akses Aktif!</h2>
-                        <p class="text-slate-500 mb-8">Produk gratis Anda sudah bisa diakses. Silakan login untuk memulai.</p>
-                        <button onclick="window.location.href='/'" class="w-full py-4 bg-brand text-white rounded-2xl font-black shadow-xl shadow-brand/30">Login Sekarang</button>
+                        <p class="text-slate-500 mb-8">Produk gratis Anda sudah bisa diakses. Silakan lanjut ke halaman berikutnya.</p>
+                        <button onclick="window.location.href='${customBtnUrl}'" class="w-full py-4 bg-brand text-white rounded-2xl font-black shadow-xl shadow-brand/30">
+                            ${customBtnText}
+                        </button>
                     </div>`;
             } else {
-                // TAMPILAN BERBAYAR (INSTRUKSI TRANSFER)
-                const banks = window.appState.settings.banks || [];
+                // TAMPILAN BERBAYAR (INSTRUKSI TRANSFER + QRIS)
+                const banks = settings.banks || [];
+                
+                // LOGIKA FITUR BARU: QRIS & REDIRECT
+                let qrisHtml = settings.qrisUrl ? `
+                    <div class="mb-8 text-center animate-in fade-in zoom-in duration-700">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Metode Scan QRIS (Otomatis)</p>
+                        <div class="bg-white p-3 rounded-[2rem] inline-block shadow-2xl border-8 border-white">
+                            <img src="${settings.qrisUrl}" class="w-52 h-52 object-contain rounded-xl">
+                        </div>
+                    </div>` : '';
+
+                const customBtnText = settings.successBtnText || 'Ke Dashboard';
+                const customBtnUrl = settings.successBtnUrl || '/';
+
                 let bankListHtml = banks.map(b => `
                     <div class="bg-white/60 dark:bg-slate-900/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 mb-3 text-left">
                         <div class="flex justify-between items-center mb-1">
@@ -3468,6 +3504,9 @@
                         <div class="glass p-6 rounded-[2.5rem] border border-white/50 dark:border-slate-800 shadow-2xl relative overflow-hidden text-left mb-8">
                             <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand/10 rounded-full blur-3xl"></div>
                             <div class="relative z-10">
+                                
+                                ${qrisHtml}
+
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-1">Total Transfer</p>
                                 <div class="text-3xl font-black text-brand text-center mb-1 flex items-center justify-center gap-2">
                                     <span>${window.formatRp(t)}</span>
@@ -3488,9 +3527,10 @@
                             </div>
                         </div>
 
-                        <button onclick="window.location.href='/'" class="w-full py-4 bg-brand text-white rounded-2xl font-black shadow-xl shadow-brand/30 transition-all mb-4">
-                            Ke Dashboard
+                        <button onclick="window.location.href='${customBtnUrl}'" class="w-full py-4 bg-brand text-white rounded-2xl font-black shadow-xl shadow-brand/30 transition-all mb-4">
+                            ${customBtnText}
                         </button>
+                        
                         <p class="text-xs text-slate-400 italic font-medium text-center">Instruksi ini juga sudah kami kirim ke WhatsApp Anda.</p>
                     </div>`;
             }
@@ -3503,16 +3543,95 @@
         }
     };
 
-    window.renderOrdersTable = () => { 
-        const tb=document.getElementById('ordersTableBody'); 
-        if(!tb) return; 
-        tb.innerHTML=''; 
-        window.appState.orders.forEach(o=>{ 
-            const b=o.status==='Paid'?`<span class="text-green-500 font-bold">Paid</span>`:`<span class="text-yellow-500 font-bold">Pending</span>`; 
-            const a=o.status==='Paid'?`<button disabled class="text-slate-400">Aktif</button>`:`<button onclick="window.approveOrder('${o.id}')" class="bg-brand text-white px-2 py-1 rounded text-xs">Approve</button>`; 
-            tb.innerHTML+=`<tr class="border-b border-white/10"><td class="px-6 py-4 font-mono text-xs dark:text-white">#${String(o.id).substring(0,6)}</td><td class="px-6 py-4"><p class="font-bold dark:text-white">${o.customerName}</p><p class="text-xs">${o.paymentMethod}</p></td><td class="px-6 py-4 dark:text-white text-xs">${o.productTitle}</td><td class="px-6 py-4 dark:text-white font-bold">${window.formatRp(o.totalPay||o.basePrice)}</td><td class="px-6 py-4">${b}</td><td class="px-6 py-4 text-right">${a}</td></tr>`; 
-        }); 
-    };
+    window.renderOrdersTable = () => {
+    const tb = document.getElementById('ordersTableBody');
+    if (!tb) return;
+    tb.innerHTML = '';
+
+    // 1. Ambil data asli dari state
+    const allOrders = window.appState.orders || [];
+    
+    // 2. Ambil input filter & search dari UI
+    const sIn = document.getElementById('orderSearchInput');
+    const sTerm = sIn ? sIn.value.toLowerCase().trim() : '';
+    const fIn = document.getElementById('orderStatusFilter');
+    const fStat = fIn ? fIn.value : 'All';
+
+    // 3. Filter Data berdasarkan Search (Nama/ID/Email) dan Status
+    const filtered = allOrders.filter(o => {
+        const name = (o.customerName || '').toLowerCase();
+        const email = (o.customerEmail || '').toLowerCase();
+        const oid = String(o.id || '').toLowerCase();
+        
+        const mSearch = name.includes(sTerm) || email.includes(sTerm) || oid.includes(sTerm);
+        const mStatus = (fStat === 'All') || (o.status === fStat);
+        
+        return mSearch && mStatus;
+    });
+
+    // 4. Konfigurasi Pagination (10 data per halaman)
+    const limit = 10;
+    const totalData = filtered.length;
+    const maxPage = Math.ceil(totalData / limit) || 1;
+    
+    // Pastikan halaman aktif tidak error
+    if (!window.appState.orderPage) window.appState.orderPage = 1;
+    if (window.appState.orderPage > maxPage) window.appState.orderPage = 1;
+
+    const start = (window.appState.orderPage - 1) * limit;
+    const end = start + limit;
+    const paged = filtered.slice(start, end);
+
+    // 5. Update Info Halaman di UI
+    if(document.getElementById('orderCurrentPage')) document.getElementById('orderCurrentPage').innerText = window.appState.orderPage;
+    if(document.getElementById('orderTotalPages')) document.getElementById('orderTotalPages').innerText = maxPage;
+    if(document.getElementById('orderTotalData')) document.getElementById('orderTotalData').innerText = totalData;
+    
+    // Atur tombol prev/next agar mati otomatis
+    if(document.getElementById('btnPrevOrder')) document.getElementById('btnPrevOrder').disabled = window.appState.orderPage <= 1;
+    if(document.getElementById('btnNextOrder')) document.getElementById('btnNextOrder').disabled = window.appState.orderPage >= maxPage;
+
+    // 6. Cek jika data kosong
+    if (paged.length === 0) {
+        tb.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-slate-500 font-bold text-xs italic">Data tidak ditemukan bray...</td></tr>';
+        return;
+    }
+
+    // 7. Render Baris ke Tabel
+    paged.forEach(o => {
+        const st = o.status === 'Paid' 
+            ? `<span class="text-green-500 font-bold text-[10px] bg-green-500/10 px-2 py-1 rounded-lg">PAID</span>` 
+            : `<span class="text-yellow-500 font-bold text-[10px] bg-yellow-500/10 px-2 py-1 rounded-lg">PENDING</span>`;
+        
+        const act = o.status === 'Paid' 
+            ? `<span class="text-slate-400 text-[10px] font-bold">VERIFIED</span>` 
+            : `<button onclick="window.approveOrder('${o.id}')" class="bg-brand text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:scale-105 transition-all shadow-md shadow-brand/20">Approve</button>`;
+        
+        tb.innerHTML += `
+            <tr class="border-b border-white/10 hover:bg-white/5 transition-colors">
+                <td class="px-6 py-4 font-mono text-[10px] dark:text-white opacity-60">#${String(o.id).substring(0,8)}</td>
+                <td class="px-6 py-4">
+                    <p class="font-bold dark:text-white text-xs">${o.customerName || 'No Name'}</p>
+                    <p class="text-[9px] text-slate-500 uppercase tracking-tighter">${o.customerWA || o.customerEmail || '-'}</p>
+                </td>
+                <td class="px-6 py-4 dark:text-white text-[10px] italic opacity-80">${o.productTitle || '-'}</td>
+                <td class="px-6 py-4 dark:text-white font-black text-brand text-xs">${window.formatRp(o.totalPay || o.basePrice)}</td>
+                <td class="px-6 py-4 text-center">${st}</td>
+                <td class="px-6 py-4 text-right">${act}</td>
+            </tr>`;
+    });
+};
+
+// Tambahan Logika Navigasi (Taruh di bawah fungsi tadi)
+window.orderNextPage = () => { window.appState.orderPage++; window.renderOrdersTable(); };
+window.orderPrevPage = () => { window.appState.orderPage--; window.renderOrdersTable(); };
+window.debounceOrderSearch = () => {
+    if (window.orderTimeout) clearTimeout(window.orderTimeout);
+    window.orderTimeout = setTimeout(() => {
+        window.appState.orderPage = 1;
+        window.renderOrdersTable();
+    }, 500);
+};
 
     window.approveOrder = async (id) => { 
         if(confirm("Approve order ini?")){ 
