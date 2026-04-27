@@ -1872,11 +1872,12 @@
         }
 
         if(set.secondaryColor) {
-        document.documentElement.style.setProperty('--secondary-color', set.secondaryColor);
+            document.documentElement.style.setProperty('--secondary-color', set.secondaryColor);
         }
        
         if(set.appName) {
             document.querySelectorAll('.app-name-display').forEach(el => el.innerText = set.appName);
+            // INI YANG GUE MASUKIN SESUAI CARA LO
             document.title = set.appName + " - Digital Product Platform";
         }
         window.applyLogo(set.logoUrl);
@@ -1886,7 +1887,7 @@
         if (document.getElementById('settingColorText')) document.getElementById('settingColorText').value = set.primaryColor || '#4f46e5';
         if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = set.logoUrl || '';
 
-        // TAMPILKAN KEMBALI DATA NOTIFIKASI (WA, Email, Telegram)
+        // TAMPILKAN KEMBALI DATA NOTIFIKASI (WA, Email, Telegram) - TETEP PAKE CARA LO SATU-SATU
         if (set.notifications) {
             if (document.getElementById('notifWaProvider')) document.getElementById('notifWaProvider').value = set.notifications.waProvider || 'fonnte';
             if (document.getElementById('notifWaToken')) document.getElementById('notifWaToken').value = set.notifications.waToken || '';
@@ -1899,7 +1900,7 @@
             if (document.getElementById('notifTelegramChatId')) document.getElementById('notifTelegramChatId').value = set.notifications.telegramChatId || '';
         }
     };
-
+    
     // --- AUTH LOGIC ---
     window.switchAuthView = (view) => {
         const lf = document.getElementById('loginForm');
