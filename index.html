@@ -792,25 +792,42 @@
 
                     <!-- VIEW UNTUK ADMIN (Daftar Payout) -->
                     <div id="adminAffiliateView" class="hidden space-y-6">
-                        <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                                    <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
-                                        <tr>
-                                            <th class="px-6 py-4 font-bold">Nama Affiliate</th>
-                                            <th class="px-6 py-4 font-bold">Info Rekening</th>
-                                            <th class="px-6 py-4 font-bold">Komisi Pending</th>
-                                            <th class="px-6 py-4 font-bold text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="payoutTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+    <div class="relative w-full md:w-80 mb-4">
+        <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="affiliateAdminSearch" oninput="window.renderPayoutTable()" placeholder="Cari nama affiliator..." class="w-full pl-11 pr-4 py-3 bg-white/5 dark:bg-slate-900/50 border border-white/10 rounded-2xl outline-none text-sm dark:text-white transition-all focus:ring-2 focus:ring-brand">
+    </div>
 
-                </div>
+    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10 border border-white/20">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
+                    <tr>
+                        <th class="px-6 py-4 font-bold">Nama Affiliate</th>
+                        <th class="px-6 py-4 font-bold">Info Rekening</th>
+                        <th class="px-6 py-4 font-bold">Komisi Pending</th>
+                        <th class="px-6 py-4 font-bold text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="payoutTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="p-4 bg-white/20 dark:bg-slate-800/20 border-t border-white/10 flex items-center justify-between">
+            <div id="payoutPaginationInfo" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Loading payout data...
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="btnPayPrev" class="p-2 rounded-lg bg-white/10 border border-white/20 hover:bg-brand hover:text-white disabled:opacity-20 transition-all">
+                    <i class="ph-bold ph-caret-left text-xs"></i>
+                </button>
+                <button id="btnPayNext" class="p-2 rounded-lg bg-white/10 border border-white/20 hover:bg-brand hover:text-white disabled:opacity-20 transition-all">
+                    <i class="ph-bold ph-caret-right text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- COUPONS VIEW -->
                 <div id="content-coupons" class="content-section hidden space-y-6">
@@ -2810,6 +2827,12 @@
         if(!tbody) return;
         tbody.innerHTML = '';
 
+        // 1. Inisialisasi State & Filter UI
+        if (!window.appState.payoutPage) window.appState.payoutPage = 1;
+        const limit = 10;
+        const searchQuery = (document.getElementById('affiliateAdminSearch')?.value || '').toLowerCase();
+
+        // 2. Logika Kalkulasi Komisi (Tetap Pake Logika Lo)
         let payoutMap = {}; 
         window.appState.orders.forEach(o => {
             if (o.status === 'Paid' && o.affiliateRef && o.affiliatePayoutStatus !== 'Paid') {
@@ -2824,14 +2847,28 @@
             }
         });
 
-        const pendingAffiliates = Object.values(payoutMap).filter(item => item.totalPending > 0);
+        // 3. Gabungkan ke Array dan Filter Berdasarkan Search
+        let pendingAffiliates = Object.values(payoutMap).filter(item => {
+            const nameMatch = (item.user.name || '').toLowerCase().includes(searchQuery);
+            const hasCommission = item.totalPending > 0;
+            return nameMatch && hasCommission;
+        });
 
-        if(pendingAffiliates.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 font-bold">Semua komisi sudah terbayar / belum ada komisi pending.</td></tr>`;
+        // 4. Logika Pagination
+        const totalData = pendingAffiliates.length;
+        const totalPages = Math.ceil(totalData / limit) || 1;
+        if (window.appState.payoutPage > totalPages) window.appState.payoutPage = 1;
+
+        const start = (window.appState.payoutPage - 1) * limit;
+        const pagedAffiliates = pendingAffiliates.slice(start, start + limit);
+
+        // 5. Render Baris ke Tabel
+        if(totalData === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-500 font-bold">Tidak ada antrian pencairan komisi.</td></tr>`;
             return;
         }
 
-        pendingAffiliates.forEach(item => {
+        pagedAffiliates.forEach(item => {
             const u = item.user;
             let bankInfo = '<span class="text-red-500 font-bold text-xs"><i class="ph ph-warning-circle"></i> Rekening belum diset</span>';
             if(u.bankName || u.bankNo) {
@@ -2845,21 +2882,37 @@
             tbody.innerHTML += `
                 <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
                     <td class="px-6 py-4">
-                        <p class="font-bold text-slate-800 dark:text-white text-base">${u.name}</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400">${u.wa || u.email}</p>
+                        <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.wa || u.email}</p>
                     </td>
                     <td class="px-6 py-4">${bankInfo}</td>
                     <td class="px-6 py-4 font-black text-orange-500 text-base">${window.formatRp(item.totalPending)}</td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="window.processPayout('${u.id}')" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md shadow-green-500/30 transition-all flex items-center gap-1 justify-end ml-auto">
+                        <button onclick="window.processPayout('${u.id}')" class="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl shadow-md shadow-green-500/30 transition-all flex items-center gap-1 justify-end ml-auto">
                             <i class="ph ph-check-circle text-base"></i> Tandai Sudah Ditransfer
                         </button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
-    };
 
+        // 6. Update Footer & Navigasi Panah
+        const info = document.getElementById('payoutPaginationInfo');
+        if (info) info.innerHTML = `Showing <b>${totalData > 0 ? start + 1 : 0}</b> to <b>${Math.min(start + limit, totalData)}</b> of <b>${totalData}</b> requests`;
+
+        const bp = document.getElementById('btnPayPrev');
+        const bn = document.getElementById('btnPayNext');
+        
+        if (bp) {
+            bp.disabled = (window.appState.payoutPage <= 1);
+            bp.onclick = () => { window.appState.payoutPage--; window.renderAdminPayoutTable(); };
+            bp.style.opacity = bp.disabled ? "0.3" : "1";
+        }
+        if (bn) {
+            bn.disabled = (window.appState.payoutPage >= totalPages);
+            bn.onclick = () => { window.appState.payoutPage++; window.renderAdminPayoutTable(); };
+            bn.style.opacity = bn.disabled ? "0.3" : "1";
+        }
+    };
     window.processPayout = async (affiliateId) => {
         if(confirm("Tandai komisi affiliate ini sudah ditransfer? Ini akan mengirim notifikasi ke Affiliate.")) {
             try {
