@@ -1737,6 +1737,9 @@
         try {
             window.showToast("Memuat data dari server...", "info");
             
+            // JALANKAN PROTEKSI UI DULUAN (Biar gak bocor pas loading)
+            if (typeof window.setupUserUI === 'function') window.setupUserUI();
+
             const [prodRes, orderRes, coupRes, tmplRes, userRes, setRes, sysRes] = await Promise.all([
                 apiCall('getProducts'),
                 apiCall('getOrders'),
@@ -1747,11 +1750,13 @@
                 apiCall('getSystemSettings')
             ]);
             
-            window.appState.products = prodRes.data || [];
-            window.appState.orders = orderRes.data || [];
-            window.appState.coupons = coupRes.data || [];
-            window.appState.templates = tmplRes.data || [];
-            window.appState.usersData = userRes.data || [];
+            // PENGAMAN DATA: Pastikan selalu jadi Array [] meskipun data di Google Sheet kosong
+            window.appState.products = Array.isArray(prodRes.data) ? prodRes.data : [];
+            window.appState.orders = Array.isArray(orderRes.data) ? orderRes.data : [];
+            window.appState.coupons = Array.isArray(coupRes.data) ? coupRes.data : [];
+            window.appState.templates = Array.isArray(tmplRes.data) ? tmplRes.data : [];
+            window.appState.usersData = Array.isArray(userRes.data) ? userRes.data : [];
+            
             if (setRes.data && !Array.isArray(setRes.data)) {
                 window.appState.settings = setRes.data;
             }
@@ -1759,11 +1764,13 @@
                 window.appState.systemSettings = sysRes.data;
             }
 
+            // Sorting Data
             if(window.appState.products.length) window.appState.products.sort((a,b) => b.createdAt - a.createdAt);
             if(window.appState.orders.length) window.appState.orders.sort((a,b) => b.createdAt - a.createdAt);
             if(window.appState.coupons.length) window.appState.coupons.sort((a,b) => b.createdAt - a.createdAt);
             if(window.appState.templates.length) window.appState.templates.sort((a,b) => a.createdAt - b.createdAt);
             
+            // Update Statistik Dashboard
             const statProductsEl = document.getElementById('statProducts');
             if (statProductsEl) statProductsEl.innerText = window.appState.products.length;
             
@@ -1773,7 +1780,7 @@
             let totalRevenue = 0;
             let activeOrdersCount = 0;
             window.appState.orders.forEach(o => {
-                if (o.status === 'Paid') {
+                if (o && o.status === 'Paid') {
                     totalRevenue += Number(o.totalPay || o.basePrice || 0);
                     activeOrdersCount++;
                 }
@@ -1783,14 +1790,13 @@
             if (statOrdersEl) statOrdersEl.innerText = activeOrdersCount;
 
             const statRevenueEl = document.getElementById('statRevenue');
-            if (statRevenueEl) {
-                statRevenueEl.innerText = window.formatRp(totalRevenue);
-            }
+            if (statRevenueEl) statRevenueEl.innerText = window.formatRp(totalRevenue);
             
+            // RENDER SEMUA TABEL & UI
             window.applySettingsUI();
             window.renderProductsTable();
             window.renderMarketplaceList();
-            window.renderOrdersTable();
+            window.renderOrdersTable(); // Pagination lo ada di sini
             window.renderCouponsTable();
             window.renderTemplatesTable();
             window.renderSettingsBankList();
@@ -1798,35 +1804,43 @@
             window.renderAffiliateList();
             window.renderSystemSettings();
 
+            // Sembunyikan tombol tambah user jika bukan admin
             if (window.appState.user && window.appState.user.role !== 'admin') {
                 const btnAdd = document.getElementById('btnAddUser');
                 if(btnAdd) btnAdd.classList.add('hidden');
             }
 
+            // Render Recent Orders
             const recContainer = document.getElementById('recentOrdersList');
             if (recContainer) {
                 recContainer.innerHTML = '';
                 const recents = window.appState.orders.slice(0, 5);
-                if(recents.length === 0) recContainer.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Belum ada order</p>';
-                recents.forEach(o => {
-                    const statusClass = o.status === 'Paid' ? 'bg-green-500/20 text-green-600' : 'bg-yellow-500/20 text-yellow-600';
-                    recContainer.innerHTML += `
-                        <div class="flex items-center gap-4 bg-white/30 dark:bg-slate-800/30 p-3 rounded-xl border border-white/40 dark:border-slate-700/50">
-                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${o.status === 'Paid'?'from-emerald-400 to-teal-500':'from-amber-400 to-orange-500'} flex items-center justify-center text-white shadow-sm"><i class="ph ph-shopping-bag text-xl"></i></div>
-                            <div class="flex-1">
-                                <p class="text-sm font-bold text-slate-800 dark:text-white truncate">${o.productTitle}</p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${o.customerName}</p>
-                            </div>
-                            <span class="px-2.5 py-1 ${statusClass} text-[10px] font-black uppercase rounded-lg">${o.status}</span>
-                        </div>
-                    `;
-                });
+                if(recents.length === 0) {
+                    recContainer.innerHTML = '<p class="text-sm text-slate-500 text-center py-4 italic">Belum ada order masuk.</p>';
+                } else {
+                    recents.forEach(o => {
+                        if(!o) return;
+                        const statusClass = o.status === 'Paid' ? 'bg-green-500/20 text-green-600' : 'bg-yellow-500/20 text-yellow-600';
+                        recContainer.innerHTML += `
+                            <div class="flex items-center gap-4 bg-white/30 dark:bg-slate-800/30 p-3 rounded-xl border border-white/40 dark:border-slate-700/50">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${o.status === 'Paid'?'from-emerald-400 to-teal-500':'from-amber-400 to-orange-500'} flex items-center justify-center text-white shadow-sm"><i class="ph ph-shopping-bag text-xl"></i></div>
+                                <div class="flex-1 overflow-hidden">
+                                    <p class="text-sm font-bold text-slate-800 dark:text-white truncate">${o.productTitle || 'Produk'}</p>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">${o.customerName || 'Customer'}</p>
+                                </div>
+                                <span class="px-2 py-1 ${statusClass} text-[9px] font-black uppercase rounded-lg shrink-0">${o.status}</span>
+                            </div>`;
+                    });
+                }
             }
             window.renderSystemSettings();
-            window.showToast("Data berhasil dimuat!", "success");
+            window.showToast("Data Berhasil Sinkron!", "success");
+
         } catch (err) {
-            console.error("Gagal memuat sebagian data:", err);
-            window.showToast("Sebagian data gagal dimuat dari server.", "error");
+            console.error("Gagal muat data:", err);
+            window.showToast("Gagal mengambil data terbaru dari server.", "error");
+            // Pastikan UI tetap terproteksi meskipun error load data
+            if (typeof window.setupUserUI === 'function') window.setupUserUI();
         }
     };
 
