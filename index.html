@@ -911,8 +911,25 @@
                                         </div>
                                             <p class="text-[10px] text-slate-400 mt-1">Gunakan warna ini untuk aksen tombol sekunder atau variasi UI.</p>
                                     </div>
-                                </div>
-                            </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="space-y-4">
+        <div class="p-4 bg-brand/5 rounded-2xl border border-brand/10 shadow-sm">
+            <label class="block text-[11px] font-black text-brand mb-2 uppercase tracking-widest">QRIS Payment URL</label>
+            <input type="text" id="settingQrisUrl" placeholder="Paste link gambar QRIS di sini" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none dark:text-white">
+        </div>
+    </div>
+    
+    <div class="space-y-4">
+        <div class="p-4 bg-purple-500/5 rounded-2xl border border-purple-500/10 space-y-3 shadow-sm">
+            <label class="block text-[11px] font-black text-purple-600 mb-1 uppercase tracking-widest">Tombol Selesai Checkout</label>
+            <div class="space-y-2">
+                <input type="text" id="settingSuccessBtnText" placeholder="Teks Tombol (Contoh: Join Grup)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none dark:text-white">
+                <input type="text" id="settingSuccessBtnUrl" placeholder="URL Tujuan (Redirect)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none dark:text-white">
+            </div>
+        </div>
+        
+        </div>
+</div>
                                 
                             <!-- WA Gateway / Notification Settings -->
                             <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
