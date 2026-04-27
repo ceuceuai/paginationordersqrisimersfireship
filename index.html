@@ -534,13 +534,26 @@
 
                 <!-- ORDERS VIEW -->
                 <div id="content-orders" class="content-section hidden space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h3 class="text-2xl font-black text-slate-800 dark:text-white">Order Management</h3>
                             <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Verifikasi dan kelola pesanan masuk.</p>
                         </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            <div class="relative flex-1 sm:w-64">
+                                <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" id="orderSearchInput" oninput="window.renderOrdersTable()" placeholder="Cari nama/produk..." class="w-full pl-10 pr-4 py-2.5 bg-white/20 dark:bg-slate-800/40 border border-white/30 dark:border-slate-700/50 rounded-xl outline-none focus:ring-2 focus:ring-brand transition-all text-sm">
+                            </div>
+                            <select id="orderStatusFilter" onchange="window.renderOrdersTable()" class="px-4 py-2.5 bg-white/20 dark:bg-slate-800/40 border border-white/30 dark:border-slate-700/50 rounded-xl outline-none text-sm cursor-pointer">
+                                <option value="ALL">Semua Status</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
+
+                    <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10 border border-white/20">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                                 <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
@@ -553,9 +566,23 @@
                                         <th class="px-6 py-4 font-bold text-right">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="ordersTableBody" class="divide-y divide-white/20 dark:divide-slate-700/50">
-                                </tbody>
+                                <tbody id="ordersTableBody" class="divide-y divide-white/10 dark:divide-slate-700/50">
+                                    </tbody>
                             </table>
+                        </div>
+
+                        <div class="p-4 bg-white/20 dark:bg-slate-800/20 border-t border-white/10 flex items-center justify-between">
+                            <div id="orderPaginationInfo" class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                Loading entries...
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button id="btnOrderPrev" onclick="window.changeOrderPage(-1)" class="p-2 rounded-lg bg-white/10 border border-white/20 hover:bg-brand hover:text-white disabled:opacity-20 transition-all">
+                                    <i class="ph-bold ph-caret-left text-xs"></i>
+                                </button>
+                                <button id="btnOrderNext" onclick="window.changeOrderPage(1)" class="p-2 rounded-lg bg-white/10 border border-white/20 hover:bg-brand hover:text-white disabled:opacity-20 transition-all">
+                                    <i class="ph-bold ph-caret-right text-xs"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3533,15 +3560,77 @@
         }
     };
 
-    window.renderOrdersTable = () => { 
-        const tb=document.getElementById('ordersTableBody'); 
-        if(!tb) return; 
-        tb.innerHTML=''; 
-        window.appState.orders.forEach(o=>{ 
-            const b=o.status==='Paid'?`<span class="text-green-500 font-bold">Paid</span>`:`<span class="text-yellow-500 font-bold">Pending</span>`; 
-            const a=o.status==='Paid'?`<button disabled class="text-slate-400">Aktif</button>`:`<button onclick="window.approveOrder('${o.id}')" class="bg-brand text-white px-2 py-1 rounded text-xs">Approve</button>`; 
-            tb.innerHTML+=`<tr class="border-b border-white/10"><td class="px-6 py-4 font-mono text-xs dark:text-white">#${String(o.id).substring(0,6)}</td><td class="px-6 py-4"><p class="font-bold dark:text-white">${o.customerName}</p><p class="text-xs">${o.paymentMethod}</p></td><td class="px-6 py-4 dark:text-white text-xs">${o.productTitle}</td><td class="px-6 py-4 dark:text-white font-bold">${window.formatRp(o.totalPay||o.basePrice)}</td><td class="px-6 py-4">${b}</td><td class="px-6 py-4 text-right">${a}</td></tr>`; 
-        }); 
+    window.renderOrdersTable = () => {
+        const tb = document.getElementById('ordersTableBody');
+        if (!tb) return;
+        tb.innerHTML = '';
+
+        // --- A. LOGIKA SEARCH & FILTER ---
+        const searchQuery = (document.getElementById('orderSearchInput')?.value || '').toLowerCase();
+        const statusFilter = document.getElementById('orderStatusFilter')?.value || 'ALL';
+
+        // Filter data mentah dari appState dengan proteksi data null/undefined
+        let filteredOrders = (window.appState.orders || []).filter(o => {
+            if (!o) return false; // Abaikan jika data hancur
+            
+            const name = (o.customerName || '').toLowerCase();
+            const title = (o.productTitle || '').toLowerCase();
+            const id = (String(o.id) || '').toLowerCase();
+            
+            const matchText = name.includes(searchQuery) || 
+                              title.includes(searchQuery) ||
+                              id.includes(searchQuery);
+                              
+            const matchStatus = statusFilter === 'ALL' || o.status === statusFilter;
+            
+            return matchText && matchStatus;
+        });
+
+        // --- B. LOGIKA PAGINATION ---
+        const limit = 10;
+        if (!window.appState.orderPage) window.appState.orderPage = 1;
+        
+        const totalData = filteredOrders.length;
+        const totalPages = Math.ceil(totalData / limit) || 1;
+
+        // Reset ke hal 1 kalau hasil search berubah
+        if (window.appState.orderPage > totalPages) window.appState.orderPage = 1;
+
+        const start = (window.appState.orderPage - 1) * limit;
+        const end = start + limit;
+        const pagedOrders = filteredOrders.slice(start, end);
+
+        // --- C. RENDER TABEL ---
+        if (pagedOrders.length === 0) {
+            tb.innerHTML = `<tr><td colspan="6" class="text-center py-10 text-slate-400 italic">Data tidak ditemukan...</td></tr>`;
+        } else {
+            pagedOrders.forEach(o => {
+                const b = o.status === 'Paid' ? `<span class="text-green-500 font-bold">Paid</span>` : `<span class="text-yellow-500 font-bold">Pending</span>`;
+                const a = o.status === 'Paid' ? `<button disabled class="text-slate-400 text-xs italic">Aktif</button>` : `<button onclick="window.approveOrder('${o.id}')" class="bg-brand text-white px-3 py-1 rounded-lg text-[10px] font-bold shadow-sm">Approve</button>`;
+                
+                tb.innerHTML += `
+                    <tr class="border-b border-white/10 hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4 font-mono text-[10px] dark:text-white opacity-50">#${String(o.id).substring(0,6)}</td>
+                        <td class="px-6 py-4">
+                            <p class="font-bold dark:text-white text-sm">${o.customerName}</p>
+                            <p class="text-[10px] opacity-60">${o.paymentMethod || 'Transfer'}</p>
+                        </td>
+                        <td class="px-6 py-4 dark:text-white text-xs">${o.productTitle}</td>
+                        <td class="px-6 py-4 dark:text-white font-black text-sm">${window.formatRp(o.totalPay || o.basePrice)}</td>
+                        <td class="px-6 py-4 text-xs">${b}</td>
+                        <td class="px-6 py-4 text-right">${a}</td>
+                    </tr>`;
+            });
+        }
+
+        // --- D. UPDATE UI INFO ---
+        const info = document.getElementById('orderPaginationInfo');
+        if (info) info.innerHTML = `Found <b>${totalData}</b> entries`;
+
+        const btnPrev = document.getElementById('btnOrderPrev');
+        const btnNext = document.getElementById('btnOrderNext');
+        if (btnPrev) btnPrev.disabled = (window.appState.orderPage === 1);
+        if (btnNext) btnNext.disabled = (window.appState.orderPage === totalPages);
     };
 
     window.approveOrder = async (id) => { 
