@@ -1682,6 +1682,8 @@
 
     window.setupUserUI = () => {
         const user = window.appState.user;
+        if (!user) return;
+
         const userDisplayNameEl = document.getElementById('userDisplayName');
         if (userDisplayNameEl) userDisplayNameEl.innerText = user.name;
         
@@ -1691,23 +1693,39 @@
         const userLicenseCodeEl = document.getElementById('userLicenseCode');
         if (userLicenseCodeEl) userLicenseCodeEl.innerText = user.license || 'TIDAK-ADA-LISENSI';
         
-        if (user.role === 'user') {
-            document.querySelectorAll('[data-target="products"], [data-target="orders"], [data-target="coupons"], [data-target="users"], [data-target="broadcast"], [data-target="templates"], [data-target="settings"], [data-target="system-settings"]').forEach(el => el.classList.add('hidden'));
-        }
-
+        // --- PROTEKSI ROLE (PENTING!) ---
         if (user.role !== 'admin') {
-            const revenueCard = document.getElementById('statRevenue')?.closest('.glass');
-            if (revenueCard) revenueCard.classList.add('hidden');
+            // Sembunyikan SEMUA menu admin untuk role selain Admin (User & Agency)
+            const adminMenus = [
+                '[data-target="products"]', 
+                '[data-target="orders"]', 
+                '[data-target="users"]', 
+                '[data-target="broadcast"]', 
+                '[data-target="templates"]', 
+                '[data-target="settings"]', 
+                '[data-target="system-settings"]'
+            ];
             
-            const ordersCard = document.getElementById('statOrders')?.closest('.glass');
-            if (ordersCard) ordersCard.classList.add('hidden');
-            
-            const chartCard = document.getElementById('salesChart')?.closest('.glass');
-            if (chartCard) chartCard.classList.add('hidden');
+            adminMenus.forEach(selector => {
+                const el = document.querySelector(selector);
+                if (el) el.classList.add('hidden');
+            });
 
+            // Sembunyikan Card Statistik Admin di Dashboard
+            document.getElementById('statRevenue')?.closest('.glass')?.classList.add('hidden');
+            document.getElementById('statOrders')?.closest('.glass')?.classList.add('hidden');
+            document.getElementById('salesChart')?.closest('.glass')?.classList.add('hidden');
+
+            // Khusus Role 'agency' atau 'user', bolehkan lihat menu kupon
             if (user.role === 'agency' || user.role === 'user') {
                 document.querySelectorAll('[data-target="coupons"]').forEach(el => el.classList.remove('hidden'));
             }
+            
+            // PAKSA SEMBUNYIKAN KONTEN SETTINGS (Biar gak bocor kayak di screenshot lo)
+            const settingSection = document.getElementById('content-settings');
+            if (settingSection) settingSection.classList.add('hidden');
+            const systemSection = document.getElementById('content-system-settings');
+            if (systemSection) systemSection.classList.add('hidden');
         }
 
         if(!user.affiliateCode) {
@@ -2034,7 +2052,16 @@
     };
 
 // --- NAVIGATION & UI LOGIC (FIXED) ---
-    window.navigate = (targetId) => {
+   window.navigate = (targetId) => {
+        // --- 1. PROTEKSI AKSES ILEGAL (ANTI-BOCOR) ---
+        const adminOnly = ['products', 'orders', 'users', 'broadcast', 'templates', 'settings', 'system-settings'];
+        if (adminOnly.includes(targetId) && window.appState.user.role !== 'admin') {
+            window.showToast("Akses Ditolak! Anda bukan Admin.", "error");
+            window.navigate('dashboard'); // Tendang balik ke dashboard
+            return;
+        }
+
+        // --- 2. UPDATE ACTIVE STATE DI SIDEBAR ---
         document.querySelectorAll('.nav-link').forEach(link => {
             if(link.dataset.target === targetId) {
                 link.classList.add('bg-white/40', 'dark:bg-slate-800/40', 'active');
@@ -2045,6 +2072,7 @@
             }
         });
 
+        // --- 3. UPDATE JUDUL HALAMAN ---
         const titles = {
             'dashboard': 'Dashboard Overview',
             'products': 'Product Management',
@@ -2063,23 +2091,23 @@
         const pageTitleEl = document.getElementById('pageTitle');
         if (pageTitleEl) pageTitleEl.innerText = titles[targetId] || 'Panel';
 
+        // --- 4. TAMPILKAN KONTEN YANG DIPILIH ---
         document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
         const targetEl = document.getElementById('content-' + targetId);
         if (targetEl) targetEl.classList.remove('hidden');
 
-        // --- INI KUNCINYA BIAR GAK BLANK ---
+        // --- 5. LOGIKA KHUSUS SYSTEM SETTINGS ---
         if (targetId === 'system-settings') {
             if (typeof window.renderSystemSettings === 'function') {
                 window.renderSystemSettings();
             }
         }
-        // -----------------------------------
 
+        // --- 6. AUTO-CLOSE SIDEBAR DI MOBILE ---
         if(window.innerWidth < 768 && window.appState.isSidebarOpen) {
             window.toggleMobileMenu();
         }
     };
-
     window.toggleMobileMenu = () => {
         window.appState.isSidebarOpen = !window.appState.isSidebarOpen;
         const sidebar = document.getElementById('sidebar');
